@@ -1,0 +1,80 @@
+<?import com.jfoenix.controls.*?>
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
+<?import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView?>
+<?import de.jensd.fx.glyphs.octicons.OctIconView?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane id="AnchorPane" prefHeight="500.0" prefWidth="800.0" style="-fx-background-color: white;"
+            xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="by.bsu.famcs.notepad.client.view.control.HomeController">
+    <children>
+        <AnchorPane layoutX="0.0" layoutY="0.0" prefHeight="50.0" prefWidth="300.0" style="-fx-background-color: #b7d7e8;">
+            <children>
+                <Label alignment="CENTER" layoutX="120.0" layoutY="10.0" text="MENU" textFill="WHITE">
+                    <font>
+                        <Font name="Segoe UI Bold" size="22.0"/>
+                    </font>
+                </Label>
+            </children>
+        </AnchorPane>
+        <AnchorPane layoutX="300.0" layoutY="0.0" prefHeight="50.0" prefWidth="500.0" style="-fx-background-color: #87bdd8;">
+            <children>
+                <FontAwesomeIconView fill="WHITE" glyphName="CLOSE" layoutX="470.0" layoutY="30.0"
+                                     onMouseClicked="#closeWindow" size="25">
+                    <cursor>
+                        <Cursor fx:constant="HAND"/>
+                    </cursor>
+                </FontAwesomeIconView>
+                <Label alignment="CENTER" layoutX="30.0" layoutY="10.0" text="SECURE NOTEPAD" textFill="WHITE">
+                    <font>
+                        <Font name="Segoe UI Bold" size="22.0"/>
+                    </font>
+                </Label>
+            </children>
+        </AnchorPane>
+        <AnchorPane layoutX="0.0" layoutY="50.0" prefHeight="500.0" prefWidth="300.0" style="-fx-background-color: #daebe8;">
+            <TextField fx:id="pathToFile" layoutX="10.0" layoutY="10.0" prefHeight="30.0" prefWidth="280.0" promptText="Enter path to txt file..."/>
+            <JFXButton layoutX="100.0" layoutY="60.0" onMouseClicked="#openFile" prefHeight="30.0" prefWidth="100.0"
+                       style="-fx-background-radius: 5; -fx-border-width: 2; -fx-border-radius: 5; -fx-border-color: white; -fx-background-color: #FFDF5C;"
+                       text="Open file"
+                       textFill="WHITE">
+                <font>
+                    <Font name="Segoe UI Bold" size="14.0"/>
+                </font>
+                <cursor>
+                    <Cursor fx:constant="HAND"/>
+                </cursor>
+            </JFXButton>
+            <JFXButton layoutX="100.0" layoutY="110.0" onMouseClicked="#saveFile" prefHeight="30.0" prefWidth="100.0"
+                       style="-fx-background-radius: 5; -fx-border-width: 2; -fx-border-radius: 5; -fx-border-color: white; -fx-background-color: #84EE56;"
+                       text="Save file"
+                       textFill="WHITE">
+                <font>
+                    <Font name="Segoe UI Bold" size="14.0"/>
+                </font>
+                <cursor>
+                    <Cursor fx:constant="HAND"/>
+                </cursor>
+            </JFXButton>
+            <JFXButton layoutX="100.0" layoutY="160.0" onMouseClicked="#deleteFile" prefHeight="30.0" prefWidth="100.0"
+                       style="-fx-background-radius: 5; -fx-border-width: 2; -fx-border-radius: 5; -fx-border-color: white; -fx-background-color: #F97C5B;"
+                       text="Delete file"
+                       textFill="WHITE">
+                <font>
+                    <Font name="Segoe UI Bold" size="14.0"/>
+                </font>
+                <cursor>
+                    <Cursor fx:constant="HAND"/>
+                </cursor>
+            </JFXButton>
+            <Separator layoutX="20.0" layoutY="210.0" prefWidth="260.0"/>
+        </AnchorPane>
+        <AnchorPane fx:id="panel" layoutX="300.0" layoutY="50.0" prefHeight="500.0" prefWidth="500.0" style="-fx-background-color: white;">
+
+        </AnchorPane>
+    </children>
+</AnchorPane>
