@@ -13,7 +13,7 @@
 
 <AnchorPane id="AnchorPane" prefHeight="500.0" prefWidth="800.0" style="-fx-background-color: white;"
             xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="by.bsu.famcs.notepad.client.view.control.LoginController">
+            fx:controller="by.bsu.famcs.notepad.client.control.LoginController">
     <children>
         <AnchorPane layoutY="26.0" prefHeight="450.0" prefWidth="800.0" style="-fx-background-color: white;">
             <children>

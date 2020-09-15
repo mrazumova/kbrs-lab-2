@@ -1,4 +1,4 @@
-package by.bsu.famcs.notepad.client.view.service;
+package by.bsu.famcs.notepad.client.service;
 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
