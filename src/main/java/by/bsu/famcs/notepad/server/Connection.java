@@ -3,12 +3,11 @@ package by.bsu.famcs.notepad.server;
 import by.bsu.famcs.notepad.server.auth.AuthenticationService;
 import by.bsu.famcs.notepad.server.security.RSA;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.math.BigInteger;
 import java.net.Socket;
 import java.security.SecureRandom;
+import java.util.Scanner;
 
 public class Connection extends Thread {
 
@@ -32,25 +31,92 @@ public class Connection extends Thread {
             System.out.println("RSA public key n: " + n);
 
             byte[] sessionKey = generateSessionKey();
-            System.out.println("SessionKey: " + sessionKey);
+            System.out.println("SessionKey size: " + sessionKey.length);
 
             byte[] encodedSessionKey = RSA.encrypt(sessionKey, e, n);
             outputStream.writeObject(encodedSessionKey);
 
             authenticate();
 
+            while (true) {
+                String action = (String) inputStream.readObject();
+                String path = (String) inputStream.readObject();
+                String result;
+                switch (action) {
+                    case "OPEN":
+                        result = getTextFromFile(new File(path));
+                        outputStream.writeObject(result);
+                        outputStream.flush();
+                        break;
+                    case "SAVE":
+                        String text = (String) inputStream.readObject();
+                        result = saveFile(new File(path), text);
+                        outputStream.writeObject(result);
+                        outputStream.flush();
+                        break;
+                    case "CREATE":
+                        result = createFile(new File(path));
+                        outputStream.writeObject(result);
+                        outputStream.flush();
+                        break;
+                    case "DELETE":
+                        result = deleteFile(new File(path));
+                        outputStream.writeObject(result);
+                        outputStream.flush();
+                        break;
+                }
+            }
         } catch (ClassNotFoundException | IOException e) {
             e.printStackTrace();
         }
     }
 
-    public byte[] generateSessionKey() {
+    private String getTextFromFile(File file) {
+        try {
+            StringBuilder builder = new StringBuilder();
+            Scanner scanner = new Scanner(file);
+            while (scanner.hasNext())
+                builder.append(scanner.nextLine());
+            scanner.close();
+            return builder.toString();
+        } catch (IOException e) {
+            return e.getMessage();
+        }
+    }
+
+    private String saveFile(File file, String text) {
+        try {
+            FileWriter writer = new FileWriter(file);
+            writer.write(text);
+            writer.close();
+            return "";
+        } catch (IOException e) {
+            return e.getMessage();
+        }
+    }
+
+    private String createFile(File file) {
+        try {
+            file.createNewFile();
+            return "";
+        } catch (IOException e) {
+            return e.getMessage();
+        }
+    }
+
+    private String deleteFile(File file) {
+        if (file.delete())
+            return "";
+        return "Couldn't delete this file.";
+    }
+
+    private byte[] generateSessionKey() {
         SecureRandom random = new SecureRandom();
         byte[] generated = new byte[64]; //key length = 128
 
         random.nextBytes(generated);
         StringBuilder builder = new StringBuilder();
-        for(int i : generated){
+        for (int i : generated) {
             String hex = Integer.toHexString(i & 0xff);
             if (hex.length() % 2 == 1)
                 hex = "0" + hex;
