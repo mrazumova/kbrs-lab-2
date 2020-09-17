@@ -1,6 +1,5 @@
 package by.bsu.famcs.notepad.serpent;
 
-import edu.rit.util.Packing;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.nio.ByteBuffer;
@@ -50,7 +49,7 @@ public class Serpent {
 
         StringBuilder str = new StringBuilder();
 
-        Packing.unpackIntLittleEndian(Integer.parseInt("1234"), iv, 0);
+        unpackIntLittleEndian(Integer.parseInt("1234"), iv, 0);
         encrypt(iv);
 
         for (int i = 0; i < fileData.length; i += 16) {
@@ -98,7 +97,7 @@ public class Serpent {
 
         StringBuilder str = new StringBuilder();
 
-        Packing.unpackIntLittleEndian(Integer.parseInt("1234"), iv, 0);
+        unpackIntLittleEndian(Integer.parseInt("1234"), iv, 0);
         encrypt(iv);
 
         for (int i = 0; i < fileData.length; i += 16) {
@@ -131,7 +130,7 @@ public class Serpent {
 
     private void setPreKeys(byte[] key) {
         for (int i = 0; i < 8; i++)
-            preKeys[i] = Packing.packIntBigEndian(new byte[]{key[4 * i], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]}, 0);
+            preKeys[i] = packIntBigEndian(new byte[]{key[4 * i], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]}, 0);
 
         for (int i = 8; i < preKeys.length; i++) {
             byte[] prnt;
@@ -140,7 +139,7 @@ public class Serpent {
                     (i - 8) ^ phi;
             preKeys[i] = (tmp << 11) | (tmp >>> (21));
             prnt = new byte[4];
-            Packing.unpackIntBigEndian(preKeys[i], prnt, 0);
+            unpackIntBigEndian(preKeys[i], prnt, 0);
         }
     }
 
@@ -345,5 +344,24 @@ public class Serpent {
                     + Character.digit(s.charAt(i + 1), 16));
         }
         return data;
+    }
+
+    private static void unpackIntLittleEndian(int var0, byte[] var1, int var2) {
+        for (int var3 = 0; var3 <= 3; ++var3)
+            var1[var2 + var3] = (byte) (var0 >> var3 * 8);
+    }
+
+    private static int packIntBigEndian(byte[] var0, int var1) {
+        int var2 = 0;
+
+        for (int var3 = 0; var3 <= 3; ++var3)
+            var2 |= (var0[var1 + var3] & 255) << (3 - var3) * 8;
+
+        return var2;
+    }
+
+    private static void unpackIntBigEndian(int var0, byte[] var1, int var2) {
+        for (int var3 = 0; var3 <= 3; ++var3)
+            var1[var2 + var3] = (byte) (var0 >> (3 - var3) * 8);
     }
 }
