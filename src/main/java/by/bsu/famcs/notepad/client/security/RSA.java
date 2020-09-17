@@ -7,9 +7,9 @@ public class RSA {
 
     private static final int BIT_LENGTH = 1024;
 
-    public static BigInteger n, e, d;
+    public BigInteger n, e, d;
 
-    public static void generatePublicKey() {
+    public void generatePublicKey() {
         SecureRandom r = new SecureRandom();
         BigInteger p = BigInteger.probablePrime(BIT_LENGTH, r);
         BigInteger q = BigInteger.probablePrime(BIT_LENGTH, r);
@@ -24,7 +24,7 @@ public class RSA {
         d = e.modInverse(phi);
     }
 
-    public static byte[] decrypt(byte[] message) {
+    public byte[] decrypt(byte[] message) {
         return (new BigInteger(message)).modPow(d, n).toByteArray();
     }
 }

@@ -2,15 +2,21 @@ package by.bsu.famcs.notepad.client;
 
 import by.bsu.famcs.notepad.client.security.RSA;
 import by.bsu.famcs.notepad.client.service.AppProperties;
+import by.bsu.famcs.notepad.serpent.Serpent;
 
 import javax.naming.AuthenticationException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 
 
 public class ClientSocket {
+
+    private static RSA rsa = new RSA();
 
     private static ObjectInputStream inputStream;
 
@@ -18,21 +24,29 @@ public class ClientSocket {
 
     private static Socket socket;
 
-    public static void login(String login, String password) throws IOException, ClassNotFoundException, AuthenticationException {
+    private static Serpent serpent;
+
+    public static void login(String login, String password) throws IOException, ClassNotFoundException, AuthenticationException, KeyStoreException, CertificateException, NoSuchAlgorithmException {
         socket = new Socket(AppProperties.getHost(), AppProperties.getPort());
         inputStream = new ObjectInputStream(socket.getInputStream());
         outputStream = new ObjectOutputStream(socket.getOutputStream());
 
-        RSA.generatePublicKey();
-        outputStream.writeObject(RSA.e);
-        outputStream.writeObject(RSA.n);
+        rsa.generatePublicKey();
+        outputStream.writeObject(rsa.e);
+        outputStream.writeObject(rsa.n);
         outputStream.flush();
 
         byte[] encodedSessionKey = (byte[]) inputStream.readObject();
-        byte[] decodedSessionKey = RSA.decrypt(encodedSessionKey);
+        byte[] decodedSessionKey = rsa.decrypt(encodedSessionKey);
 
-        outputStream.writeObject(login);
-        outputStream.writeObject(password);
+        serpent = new Serpent();
+        serpent.setKey(decodedSessionKey);
+
+        String encryptedLogin = serpent.encrypt(login);
+        String encryptedPassword = serpent.encrypt(password);
+
+        outputStream.writeObject(encryptedLogin);
+        outputStream.writeObject(encryptedPassword);
         outputStream.flush();
 
         boolean isAuthenticated = (boolean) inputStream.readObject();
@@ -47,13 +61,16 @@ public class ClientSocket {
         outputStream.writeObject(path);
         outputStream.flush();
 
-        return (String) inputStream.readObject();
+        String encodedText = (String) inputStream.readObject();
+        return serpent.decrypt(encodedText);
     }
 
     public static String saveFile(String path, String text) throws IOException, ClassNotFoundException {
         outputStream.writeObject("SAVE");
         outputStream.writeObject(path);
-        outputStream.writeObject(text);
+
+        String encodedText = serpent.encrypt(text);
+        outputStream.writeObject(encodedText);
         outputStream.flush();
 
         return (String) inputStream.readObject();

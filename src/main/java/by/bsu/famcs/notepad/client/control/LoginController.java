@@ -12,6 +12,9 @@ import javafx.scene.input.MouseEvent;
 import javax.naming.AuthenticationException;
 import java.io.IOException;
 import java.net.URL;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.ResourceBundle;
 
 public class LoginController implements Initializable {
@@ -39,7 +42,7 @@ public class LoginController implements Initializable {
             try {
                 ClientSocket.login(username, password);
                 loader.initPage(event, "/view/home.fxml");
-            } catch (ClassNotFoundException | IOException e) {
+            } catch (ClassNotFoundException | IOException | KeyStoreException | CertificateException | NoSuchAlgorithmException e) {
                 new Notification("Error!", e.getMessage());
             } catch (AuthenticationException e) {
                 new Notification("Error!", "Invalid username or password.");

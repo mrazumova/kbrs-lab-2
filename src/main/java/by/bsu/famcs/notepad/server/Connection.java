@@ -1,5 +1,6 @@
 package by.bsu.famcs.notepad.server;
 
+import by.bsu.famcs.notepad.serpent.Serpent;
 import by.bsu.famcs.notepad.server.auth.AuthenticationService;
 import by.bsu.famcs.notepad.server.security.RSA;
 
@@ -11,15 +12,23 @@ import java.util.Scanner;
 
 public class Connection extends Thread {
 
+    private final int KEY_LENGTH = 128;
+
     private final ObjectOutputStream outputStream;
+
     private final ObjectInputStream inputStream;
+
     private final String address;
+
+    private Serpent serpent;
+
     private BigInteger e, n;
 
     public Connection(Socket socket) throws IOException {
         outputStream = new ObjectOutputStream(socket.getOutputStream());
         inputStream = new ObjectInputStream(socket.getInputStream());
         address = socket.getInetAddress().toString();
+        serpent = new Serpent();
     }
 
     @Override
@@ -27,14 +36,16 @@ public class Connection extends Thread {
         try {
             e = (BigInteger) inputStream.readObject();
             n = ((BigInteger) inputStream.readObject());
-            System.out.println("RSA public key e: " + e);
-            System.out.println("RSA public key n: " + n);
+            System.out.println("[" + address + "] RSA public key e: " + e);
+            System.out.println("[" + address + "] RSA public key n: " + n);
 
             byte[] sessionKey = generateSessionKey();
-            System.out.println("SessionKey size: " + sessionKey.length);
+            System.out.println("[" + address + "] SessionKey size: " + sessionKey.length);
 
             byte[] encodedSessionKey = RSA.encrypt(sessionKey, e, n);
             outputStream.writeObject(encodedSessionKey);
+
+            serpent.setKey(sessionKey);
 
             authenticate();
 
@@ -45,12 +56,14 @@ public class Connection extends Thread {
                 switch (action) {
                     case "OPEN":
                         result = getTextFromFile(new File(path));
-                        outputStream.writeObject(result);
+                        String encryptedResult = serpent.encrypt(result);
+                        outputStream.writeObject(encryptedResult);
                         outputStream.flush();
                         break;
                     case "SAVE":
-                        String text = (String) inputStream.readObject();
-                        result = saveFile(new File(path), text);
+                        String encodedText = (String) inputStream.readObject();
+                        String decodedText = serpent.decrypt(encodedText);
+                        result = saveFile(new File(path), decodedText);
                         outputStream.writeObject(result);
                         outputStream.flush();
                         break;
@@ -67,7 +80,7 @@ public class Connection extends Thread {
                 }
             }
         } catch (ClassNotFoundException | IOException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
     }
 
@@ -112,7 +125,7 @@ public class Connection extends Thread {
 
     private byte[] generateSessionKey() {
         SecureRandom random = new SecureRandom();
-        byte[] generated = new byte[64]; //key length = 128
+        byte[] generated = new byte[KEY_LENGTH / 2];
 
         random.nextBytes(generated);
         StringBuilder builder = new StringBuilder();
@@ -127,15 +140,18 @@ public class Connection extends Thread {
     }
 
     private void authenticate() throws IOException, ClassNotFoundException {
-        String login = (String) inputStream.readObject();
-        String password = (String) inputStream.readObject();
+        String encryptedLogin = (String) inputStream.readObject();
+        String encryptedPassword = (String) inputStream.readObject();
 
-        boolean isAuthenticated = AuthenticationService.authenticate(login, password);
+        String decryptedLogin = serpent.decrypt(encryptedLogin);
+        String decryptedPassword = serpent.decrypt(encryptedPassword);
+
+        boolean isAuthenticated = AuthenticationService.authenticate(decryptedLogin, decryptedPassword);
 
         outputStream.writeObject(isAuthenticated);
         if (isAuthenticated)
-            System.out.println("User " + login + " logged in successfully");
+            System.out.println("[" + address + "] User " + decryptedLogin + " logged in successfully");
         else
-            System.out.println("Authentication failed. Reconnecting... " + address);
+            System.out.println("[" + address + "] Authentication failed. Reconnecting... " + address);
     }
 }
