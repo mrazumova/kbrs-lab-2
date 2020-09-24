@@ -39,28 +39,24 @@ public class Connection extends Thread {
             System.out.println("[" + address + "] RSA public key e: " + e);
             System.out.println("[" + address + "] RSA public key n: " + n);
 
-            byte[] sessionKey = generateSessionKey();
-            System.out.println("[" + address + "] SessionKey size: " + sessionKey.length);
-
-            byte[] encodedSessionKey = RSA.encrypt(sessionKey, e, n);
-            outputStream.writeObject(encodedSessionKey);
-
-            serpent.setKey(sessionKey);
+            setSessionKey();
 
             authenticate();
 
             while (true) {
                 String action = (String) inputStream.readObject();
-                String path = (String) inputStream.readObject();
+                String path;
                 String result;
                 switch (action) {
                     case "OPEN":
+                        path = (String) inputStream.readObject();
                         result = getTextFromFile(new File(path));
                         String encryptedResult = serpent.encrypt(result);
                         outputStream.writeObject(encryptedResult);
                         outputStream.flush();
                         break;
                     case "SAVE":
+                        path = (String) inputStream.readObject();
                         String encodedText = (String) inputStream.readObject();
                         String decodedText = serpent.decrypt(encodedText);
                         result = saveFile(new File(path), decodedText);
@@ -68,15 +64,19 @@ public class Connection extends Thread {
                         outputStream.flush();
                         break;
                     case "CREATE":
+                        path = (String) inputStream.readObject();
                         result = createFile(new File(path));
                         outputStream.writeObject(result);
                         outputStream.flush();
                         break;
                     case "DELETE":
+                        path = (String) inputStream.readObject();
                         result = deleteFile(new File(path));
                         outputStream.writeObject(result);
                         outputStream.flush();
                         break;
+                    case "REFRESH SESSION KEY":
+                        setSessionKey();
                 }
             }
         } catch (ClassNotFoundException | IOException e) {
@@ -137,6 +137,16 @@ public class Connection extends Thread {
         }
 
         return builder.toString().getBytes();
+    }
+
+    private void setSessionKey() throws IOException {
+        byte[] sessionKey = generateSessionKey();
+        System.out.println("[" + address + "] SessionKey size: " + sessionKey.length);
+
+        byte[] encodedSessionKey = RSA.encrypt(sessionKey, e, n);
+        outputStream.writeObject(encodedSessionKey);
+
+        serpent.setKey(sessionKey);
     }
 
     private void authenticate() throws IOException, ClassNotFoundException {
